@@ -24,7 +24,7 @@ export function TranslationEditor({
     const [isSaving, setIsSaving] = useState(false);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
-    const { updateEditingValue, cancelEditing, confirmEditing } = useTranslationStore();
+    const { updateEditingValue, cancelEditing, confirmEditing, addToast } = useTranslationStore();
     const updateMutation = useUpdateTranslation();
 
     // Auto-focus when editing starts
@@ -57,7 +57,9 @@ export function TranslationEditor({
                 },
             });
             confirmEditing();
+            addToast('Translation saved successfully', 'success');
         } catch {
+            addToast('Failed to save translation', 'error');
         } finally {
             setIsSaving(false);
         }

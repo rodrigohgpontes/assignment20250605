@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { SearchFilters } from '../lib/types';
+import { SearchFilters, Toast } from '../lib/types';
 
 interface EditingState {
     keyId: string;
@@ -21,6 +21,9 @@ interface TranslationStore {
     selectedKeys: Set<string>;
     isLoading: boolean;
     error: string | null;
+
+    // Toast notifications
+    toasts: Toast[];
 
     // Actions for search and filters
     setSearchTerm: (term: string) => void;
@@ -43,6 +46,11 @@ interface TranslationStore {
     setLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
 
+    // Toast actions
+    addToast: (message: string, type: Toast['type'], duration?: number) => void;
+    removeToast: (id: string) => void;
+    clearToasts: () => void;
+
     // Utility actions
     reset: () => void;
 }
@@ -58,6 +66,7 @@ const initialState = {
     selectedKeys: new Set<string>(),
     isLoading: false,
     error: null,
+    toasts: [],
 };
 
 export const useTranslationStore = create<TranslationStore>()(
@@ -153,6 +162,23 @@ export const useTranslationStore = create<TranslationStore>()(
             setError: (error: string | null) =>
                 set({ error }, false, 'setError'),
 
+            // Toast actions
+            addToast: (message: string, type: Toast['type'], duration = 4000) => {
+                const id = Math.random().toString(36).substr(2, 9);
+                const toast: Toast = { id, message, type, duration };
+                set((state) => ({
+                    toasts: [...state.toasts, toast],
+                }), false, 'addToast');
+            },
+
+            removeToast: (id: string) =>
+                set((state) => ({
+                    toasts: state.toasts.filter(toast => toast.id !== id),
+                }), false, 'removeToast'),
+
+            clearToasts: () =>
+                set({ toasts: [] }, false, 'clearToasts'),
+
             // Utility actions
             reset: () =>
                 set(initialState, false, 'reset'),
@@ -163,7 +189,7 @@ export const useTranslationStore = create<TranslationStore>()(
     )
 );
 
-// Selectors for commonly used computed values
+// Stable selectors to prevent hydration issues
 export const useSearchFilters = () =>
     useTranslationStore((state) => state.searchFilters);
 
@@ -180,4 +206,19 @@ export const useUIState = () =>
     useTranslationStore((state) => ({
         isLoading: state.isLoading,
         error: state.error,
-    })); 
+    }));
+
+// Create a stable selector for toasts with proper SSR handling
+export const useToasts = () => {
+    const toasts = useTranslationStore((state) => state.toasts);
+    const removeToast = useTranslationStore((state) => state.removeToast);
+    const addToast = useTranslationStore((state) => state.addToast);
+    const clearToasts = useTranslationStore((state) => state.clearToasts);
+
+    return {
+        toasts,
+        removeToast,
+        addToast,
+        clearToasts,
+    };
+}; 

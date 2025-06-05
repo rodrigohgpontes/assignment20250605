@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useTranslationKeys } from '../hooks/useTranslations';
 import { useTranslationFilters } from '../hooks/useTranslationFilters';
 import { useTranslationStore } from '../store/translationStore';
@@ -10,6 +10,7 @@ import { CategoryFilter } from './ui/CategoryFilter';
 import { LocaleFilter } from './ui/LocaleFilter';
 import { LoadingSpinner } from './ui/LoadingSpinner';
 import { ErrorMessage } from './ui/ErrorMessage';
+import { VirtualizedList, useVirtualization } from './VirtualizedList';
 import { TranslationKey } from '../lib/types';
 
 // Helper function to get display name for locale codes
@@ -63,14 +64,52 @@ export function TranslationKeyManager() {
         }
     }, [availableLocales, selectedLocale, setStoreSelectedLocale]);
 
-    const handleEditClick = (keyId: string, locale: string, currentValue: string) => {
+    // Memoized callbacks for better performance
+    const handleEditClick = useCallback((keyId: string, locale: string, currentValue: string) => {
         startEditing(keyId, locale, currentValue);
-    };
+    }, [startEditing]);
 
-    const handleLocaleChange = (locale: string) => {
+    const handleLocaleChange = useCallback((locale: string) => {
         setSelectedLocale(locale);
         setStoreSelectedLocale(locale);
-    };
+    }, [setStoreSelectedLocale]);
+
+    // Check if virtualization should be enabled
+    const shouldVirtualize = useVirtualization(filteredKeys.length);
+    const ITEM_HEIGHT = 120; // Approximate height of each row
+    const CONTAINER_HEIGHT = 600; // Fixed container height for virtualization
+
+    // Memoized render function for virtualized items
+    const renderTranslationKeyRow = useCallback((translationKey: TranslationKey) => (
+        <TranslationKeyRow
+            key={translationKey.id}
+            translationKey={translationKey}
+            selectedLocale={selectedLocale}
+            isEditing={isEditing && editingState?.keyId === translationKey.id && editingState?.locale === selectedLocale}
+            onEditClick={handleEditClick}
+        />
+    ), [selectedLocale, isEditing, editingState, handleEditClick]);
+
+    // Memoized table content
+    const tableContent = useMemo(() => {
+        if (shouldVirtualize) {
+            return (
+                <VirtualizedList
+                    items={filteredKeys}
+                    itemHeight={ITEM_HEIGHT}
+                    containerHeight={CONTAINER_HEIGHT}
+                    renderItem={renderTranslationKeyRow}
+                    className="divide-y divide-stone-200 dark:divide-stone-600"
+                />
+            );
+        }
+
+        return (
+            <div className="divide-y divide-stone-200 dark:divide-stone-600">
+                {filteredKeys.map((translationKey) => renderTranslationKeyRow(translationKey))}
+            </div>
+        );
+    }, [shouldVirtualize, filteredKeys, renderTranslationKeyRow]);
 
     if (isLoading) {
         return (
@@ -124,6 +163,11 @@ export function TranslationKeyManager() {
                     {searchFilters.searchTerm && ` for "${searchFilters.searchTerm}"`}
                     {searchFilters.selectedCategory && ` in category "${searchFilters.selectedCategory}"`}
                     {selectedLocale && ` with ${selectedLocale.toUpperCase()} translations`}
+                    {shouldVirtualize && (
+                        <span className="ml-2 text-blue-600 dark:text-blue-400">
+                            (Virtualized for performance)
+                        </span>
+                    )}
                 </div>
             </div>
 
@@ -158,17 +202,7 @@ export function TranslationKeyManager() {
                         </div>
 
                         {/* Table body */}
-                        <div className="divide-y divide-stone-200 dark:divide-stone-600">
-                            {filteredKeys.map((translationKey) => (
-                                <TranslationKeyRow
-                                    key={translationKey.id}
-                                    translationKey={translationKey}
-                                    selectedLocale={selectedLocale}
-                                    isEditing={isEditing && editingState?.keyId === translationKey.id && editingState?.locale === selectedLocale}
-                                    onEditClick={handleEditClick}
-                                />
-                            ))}
-                        </div>
+                        {tableContent}
                     </div>
                 )}
             </div>
@@ -184,7 +218,7 @@ interface TranslationKeyRowProps {
     onEditClick: (keyId: string, locale: string, currentValue: string) => void;
 }
 
-function TranslationKeyRow({
+const TranslationKeyRow = React.memo(function TranslationKeyRow({
     translationKey,
     selectedLocale,
     isEditing,
@@ -194,11 +228,11 @@ function TranslationKeyRow({
     const hasTranslation = !!translation;
     const translationValue = translation?.value || '';
 
-    const handleClick = () => {
+    const handleClick = React.useCallback(() => {
         if (!isEditing) {
             onEditClick(translationKey.id, selectedLocale, translationValue);
         }
-    };
+    }, [isEditing, onEditClick, translationKey.id, selectedLocale, translationValue]);
 
     return (
         <div className="px-6 py-4 hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors">
@@ -268,4 +302,4 @@ function TranslationKeyRow({
             </div>
         </div>
     );
-} 
+}); 

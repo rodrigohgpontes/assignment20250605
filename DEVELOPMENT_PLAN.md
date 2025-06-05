@@ -47,10 +47,10 @@ Building a localization management feature with React/Next.js frontend and FastA
 
 ### 3.1 Choose One Feature to Implement
 **Selected: Bulk Update Endpoint** (most practical for UI)
-- [ ] Create `PUT /translation-keys/bulk` endpoint
-- [ ] Accept array of translation updates
-- [ ] Implement transaction handling
-- [ ] Add validation and error handling
+- [x] Create `PUT /translation-keys/bulk` endpoint
+- [x] Accept array of translation updates
+- [x] Implement transaction handling
+- [x] Add validation and error handling
 
 ### 3.2 Backend Tests
 - [ ] Test database queries with sample data

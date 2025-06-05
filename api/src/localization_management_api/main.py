@@ -11,6 +11,7 @@ from .models import (
     TranslationKeyCreate,
     TranslationKeyUpdate,
     TranslationCreate,
+    BulkUpdateRequest,
     APIResponse
 )
 
@@ -206,6 +207,47 @@ async def create_translation(key_id: UUID, locale: str, translation_data: Transl
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create translation: {str(e)}")
+
+
+# Bulk operations
+
+@app.put("/translation-keys/bulk", response_model=APIResponse)
+async def bulk_update_translations(bulk_request: BulkUpdateRequest) -> APIResponse:
+    """
+    Bulk update multiple translations at once
+    This is useful for updating many translations simultaneously from the UI
+    """
+    try:
+        if not bulk_request.updates:
+            raise HTTPException(status_code=400, detail="No updates provided")
+        
+        # Validate that all translation keys exist
+        unique_key_ids = set(update.translation_key_id for update in bulk_request.updates)
+        
+        for key_id in unique_key_ids:
+            translation_key = await db_service.get_translation_key(key_id)
+            if not translation_key:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"Translation key with ID {key_id} not found"
+                )
+        
+        # Perform bulk update
+        success = await db_service.bulk_update_translations(bulk_request.updates)
+        
+        if success:
+            return APIResponse(
+                success=True, 
+                message=f"Successfully updated {len(bulk_request.updates)} translations",
+                data={"updated_count": len(bulk_request.updates)}
+            )
+        else:
+            raise HTTPException(status_code=500, detail="Failed to perform bulk update")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to bulk update translations: {str(e)}")
 
 
 # Utility endpoints

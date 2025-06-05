@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 import asyncio
 from typing import AsyncGenerator, List
 from httpx import AsyncClient
@@ -16,7 +17,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
     """Create an async HTTP client for testing the API."""
     from httpx import ASGITransport

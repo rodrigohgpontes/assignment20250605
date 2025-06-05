@@ -1,2 +1,7 @@
 fastapi
-uvicorn[standard] 
+uvicorn[standard]
+supabase
+pytest
+pytest-asyncio
+pydantic
+python-dotenv 

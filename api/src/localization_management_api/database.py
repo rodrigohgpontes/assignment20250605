@@ -37,7 +37,30 @@ class DatabaseService:
             response = query.execute()
             
             if response.data:
-                return [TranslationKey(**item) for item in response.data]
+                # Transform the translations array to a dict indexed by language_code
+                transformed_data = []
+                for item in response.data:
+                    translations_dict = {}
+                    if 'translations' in item and item['translations']:
+                        for translation in item['translations']:
+                            translations_dict[translation['language_code']] = {
+                                'value': translation['value'],
+                                'updated_at': translation['updated_at'],
+                                'updated_by': translation['updated_by']
+                            }
+                    
+                    transformed_item = {
+                        'id': item['id'],
+                        'key': item['key'],
+                        'category': item['category'],
+                        'description': item.get('description'),
+                        'created_at': item['created_at'],
+                        'updated_at': item['updated_at'],
+                        'translations': translations_dict
+                    }
+                    transformed_data.append(transformed_item)
+                
+                return [TranslationKey(**item) for item in transformed_data]
             return []
         except Exception as e:
             raise Exception(f"Failed to fetch translation keys: {str(e)}")
@@ -50,7 +73,28 @@ class DatabaseService:
             ).eq("id", str(key_id)).execute()
             
             if response.data and len(response.data) > 0:
-                return TranslationKey(**response.data[0])
+                item = response.data[0]
+                # Transform the translations array to a dict indexed by language_code
+                translations_dict = {}
+                if 'translations' in item and item['translations']:
+                    for translation in item['translations']:
+                        translations_dict[translation['language_code']] = {
+                            'value': translation['value'],
+                            'updated_at': translation['updated_at'],
+                            'updated_by': translation['updated_by']
+                        }
+                
+                transformed_item = {
+                    'id': item['id'],
+                    'key': item['key'],
+                    'category': item['category'],
+                    'description': item.get('description'),
+                    'created_at': item['created_at'],
+                    'updated_at': item['updated_at'],
+                    'translations': translations_dict
+                }
+                
+                return TranslationKey(**transformed_item)
             return None
         except Exception as e:
             raise Exception(f"Failed to fetch translation key: {str(e)}")
@@ -63,7 +107,28 @@ class DatabaseService:
             ).eq("key", key).execute()
             
             if response.data and len(response.data) > 0:
-                return TranslationKey(**response.data[0])
+                item = response.data[0]
+                # Transform the translations array to a dict indexed by language_code
+                translations_dict = {}
+                if 'translations' in item and item['translations']:
+                    for translation in item['translations']:
+                        translations_dict[translation['language_code']] = {
+                            'value': translation['value'],
+                            'updated_at': translation['updated_at'],
+                            'updated_by': translation['updated_by']
+                        }
+                
+                transformed_item = {
+                    'id': item['id'],
+                    'key': item['key'],
+                    'category': item['category'],
+                    'description': item.get('description'),
+                    'created_at': item['created_at'],
+                    'updated_at': item['updated_at'],
+                    'translations': translations_dict
+                }
+                
+                return TranslationKey(**transformed_item)
             return None
         except Exception as e:
             raise Exception(f"Failed to fetch translation key by key: {str(e)}")
@@ -197,7 +262,30 @@ class DatabaseService:
             ).execute()
             
             if response.data:
-                return [TranslationKey(**item) for item in response.data]
+                # Transform the translations array to a dict indexed by language_code
+                transformed_data = []
+                for item in response.data:
+                    translations_dict = {}
+                    if 'translations' in item and item['translations']:
+                        for translation in item['translations']:
+                            translations_dict[translation['language_code']] = {
+                                'value': translation['value'],
+                                'updated_at': translation['updated_at'],
+                                'updated_by': translation['updated_by']
+                            }
+                    
+                    transformed_item = {
+                        'id': item['id'],
+                        'key': item['key'],
+                        'category': item['category'],
+                        'description': item.get('description'),
+                        'created_at': item['created_at'],
+                        'updated_at': item['updated_at'],
+                        'translations': translations_dict
+                    }
+                    transformed_data.append(transformed_item)
+                
+                return [TranslationKey(**item) for item in transformed_data]
             return []
         except Exception as e:
             raise Exception(f"Failed to search translation keys: {str(e)}")

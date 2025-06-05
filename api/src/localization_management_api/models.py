@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel, Field
 from uuid import UUID
 
@@ -47,7 +47,7 @@ class TranslationKey(TranslationKeyBase):
     id: UUID
     created_at: datetime
     updated_at: datetime
-    translations: List[Translation] = []
+    translations: Dict[str, Dict[str, str]] = {}
 
     class Config:
         from_attributes = True

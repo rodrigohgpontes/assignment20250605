@@ -4,4 +4,5 @@ supabase
 pytest
 pytest-asyncio
 pydantic
-python-dotenv 
+python-dotenv
+httpx 

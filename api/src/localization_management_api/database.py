@@ -15,7 +15,14 @@ from .models import (
 
 class DatabaseService:
     def __init__(self):
-        self.client: Client = get_supabase_client()
+        try:
+            self.client: Client = get_supabase_client()
+        except Exception as e:
+            import os
+            if os.getenv("TESTING", "false").lower() == "true":
+                self.client = None
+            else:
+                raise
 
     # Translation Keys CRUD operations
     

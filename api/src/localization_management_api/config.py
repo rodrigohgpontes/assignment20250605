@@ -1,10 +1,13 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from typing import Optional
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from .env file in the api directory
+api_dir = Path(__file__).parent.parent.parent
+env_path = api_dir / ".env"
+load_dotenv(env_path)
 
 
 class Settings:
@@ -16,9 +19,10 @@ class Settings:
         self.api_port: int = int(os.getenv("API_PORT", "8000"))
         self.debug: bool = os.getenv("DEBUG", "false").lower() == "true"
         self.allowed_origins: list = os.getenv("ALLOWED_ORIGINS", "").split(",")
+        self.testing: bool = os.getenv("TESTING", "false").lower() == "true"
         
         # Validate required environment variables
-        if not self.supabase_url or not self.supabase_anon_key:
+        if not self.testing and (not self.supabase_url or not self.supabase_anon_key):
             raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables")
 
     @property

@@ -12,14 +12,16 @@ export function LoadingSpinner({ size = 'md', className = '', text }: LoadingSpi
     };
 
     return (
-        <div className={`flex items-center justify-center ${className}`}>
+        <div className={`flex items-center justify-center ${className}`} role="status" aria-live="polite">
             <div className="flex flex-col items-center space-y-2">
                 <div
                     className={`${sizeClasses[size]} border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin`}
+                    aria-hidden="true"
                 ></div>
                 {text && (
                     <p className="text-sm text-stone-500 dark:text-stone-400">{text}</p>
                 )}
+                {!text && <span className="sr-only">Loading</span>}
             </div>
         </div>
     );

@@ -408,4 +408,30 @@ class TestAPIEndpoints:
         # Should contain our test key
         localizations = data["localizations"]
         if created_key["key"] in localizations:
-            assert localizations[created_key["key"]] == "Hello"  # From sample_translations 
+            assert localizations[created_key["key"]] == "Hello"  # From sample_translations
+
+    @pytest.mark.asyncio
+    async def test_csv_bulk_import(self, client: AsyncClient):
+        """Test CSV bulk import endpoint."""
+        csv_data = """key,category,description,en,es,pt
+csv.test.hello,greetings,Hello greeting,Hello,Hola,Olá
+csv.test.goodbye,greetings,Goodbye message,Goodbye,Adiós,Tchau
+csv.button.save,buttons,Save button,Save,Guardar,Salvar"""
+
+        response = await client.post(
+            "/translation-keys/bulk/csv",
+            json={
+                "csv_data": csv_data,
+                "updated_by": "test_user"
+            }
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        # Flexible check - at least some keys were created
+        assert data["data"]["created_keys"] >= 2
+        assert data["data"]["translations_updated"] >= 6  # At least some translations
+        
+        # Verify CSV endpoint was called successfully
+        assert "CSV import completed successfully" in data["message"] 

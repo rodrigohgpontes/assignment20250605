@@ -1,6 +1,21 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { TranslationKeyManager } from '../components/TranslationKeyManager';
+import { CSVBulkImport } from '../components/CSVBulkImport';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../hooks/useTranslations';
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<'manage' | 'import'>('manage');
+  const queryClient = useQueryClient();
+
+  // Refresh translation data when switching to manage tab
+  useEffect(() => {
+    if (activeTab === 'manage') {
+      queryClient.invalidateQueries({ queryKey: queryKeys.translationKeys });
+    }
+  }, [activeTab, queryClient]);
   return (
     <div className="flex flex-col min-h-screen bg-stone-100 dark:bg-stone-900 text-stone-800 dark:text-stone-200 font-[family-name:var(--font-geist-sans)]">
       {/* Header */}
@@ -32,7 +47,35 @@ export default function Home() {
           </p>
         </div>
 
-        <TranslationKeyManager />
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="border-b border-stone-200 dark:border-stone-700">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('manage')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'manage'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 hover:border-stone-300 dark:hover:border-stone-600'
+                  }`}
+              >
+                Manage Translations
+              </button>
+              <button
+                onClick={() => setActiveTab('import')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'import'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 hover:border-stone-300 dark:hover:border-stone-600'
+                  }`}
+              >
+                CSV Bulk Import
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'manage' && <TranslationKeyManager />}
+        {activeTab === 'import' && <CSVBulkImport />}
       </div>
 
       {/* Footer */}

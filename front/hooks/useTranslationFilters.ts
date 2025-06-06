@@ -47,17 +47,18 @@ export function useTranslationFilters(translationKeys: TranslationKey[]) {
             });
         }
 
-        // Filter by category
-        if (searchFilters.selectedCategory) {
-            filtered = filtered.filter((key) => key.category === searchFilters.selectedCategory);
-        }
-
-        // Filter by locale (only show keys that have translations for the selected locale)
-        if (searchFilters.selectedLocale) {
+        // Filter by categories (only show keys that match selected categories)
+        if (searchFilters.selectedCategories && searchFilters.selectedCategories.length > 0) {
             filtered = filtered.filter((key) =>
-                key.translations[searchFilters.selectedLocale]
+                searchFilters.selectedCategories.includes(key.category)
             );
         }
+
+        // Note: We don't filter by locales - we show all keys and let the UI handle empty translations
+        // This way users can see all keys and add missing translations where needed
+
+        // Sort by category
+        filtered.sort((a, b) => a.category.localeCompare(b.category));
 
         return filtered;
     }, [translationKeys, searchFilters]);
@@ -72,8 +73,8 @@ export function useTranslationFilters(translationKeys: TranslationKey[]) {
         filteredCount: filteredKeys.length,
         hasFilters: !!(
             searchFilters.searchTerm ||
-            searchFilters.selectedCategory ||
-            searchFilters.selectedLocale
+            (searchFilters.selectedCategories && searchFilters.selectedCategories.length > 0) ||
+            (searchFilters.selectedLocales && searchFilters.selectedLocales.length > 0)
         ),
     };
 } 

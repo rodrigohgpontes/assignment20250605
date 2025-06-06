@@ -47,8 +47,8 @@ export interface CreateTranslationKeyRequest {
 
 export interface SearchFilters {
     searchTerm: string;
-    selectedCategory: string;
-    selectedLocale: string;
+    selectedCategories: string[];
+    selectedLocales: string[];
 }
 
 export interface ApiError {

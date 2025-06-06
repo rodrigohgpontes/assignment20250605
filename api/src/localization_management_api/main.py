@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional, Dict, Any
 from uuid import UUID
+import csv
+import io
 
 from .config import settings
 from .database import db_service
@@ -12,6 +14,8 @@ from .models import (
     TranslationKeyUpdate,
     TranslationCreate,
     BulkUpdateRequest,
+    BulkTranslationUpdate,
+    CSVBulkImportRequest,
     APIResponse
 )
 
@@ -115,6 +119,101 @@ async def bulk_update_translations(bulk_request: BulkUpdateRequest) -> APIRespon
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to bulk update translations: {str(e)}")
+
+
+@app.post("/translation-keys/bulk/csv", response_model=APIResponse)
+async def bulk_import_from_csv(csv_request: CSVBulkImportRequest) -> APIResponse:
+    """
+    Bulk import translation keys and translations from CSV data
+    Expected CSV format: key,category,description,en,es,pt
+    """
+    try:
+        # Parse CSV data
+        csv_reader = csv.DictReader(io.StringIO(csv_request.csv_data))
+        
+        created_keys = 0
+        updated_keys = 0
+        translation_updates = []
+        
+        for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 since row 1 is header
+            try:
+                # Validate required fields
+                if not row.get('key') or not row.get('category'):
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Row {row_num}: 'key' and 'category' are required fields"
+                    )
+                
+                key = row['key'].strip()
+                category = row['category'].strip()
+                description = row.get('description', '').strip() or None
+                
+                # Check if translation key exists
+                existing_key = await db_service.get_translation_key_by_key(key)
+                
+                if not existing_key:
+                    # Create new translation key
+                    new_key = TranslationKeyCreate(
+                        key=key,
+                        category=category,
+                        description=description
+                    )
+                    created_key = await db_service.create_translation_key(new_key)
+                    key_id = created_key.id
+                    created_keys += 1
+                else:
+                    # Update existing key if category or description changed
+                    if existing_key.category != category or existing_key.description != description:
+                        update_data = TranslationKeyUpdate(
+                            category=category,
+                            description=description
+                        )
+                        await db_service.update_translation_key(existing_key.id, update_data)
+                        updated_keys += 1
+                    key_id = existing_key.id
+                
+                # Prepare translation updates for en, es, pt
+                for lang_code in ['en', 'es', 'pt']:
+                    value = row.get(lang_code, '').strip()
+                    if value:  # Only add non-empty translations
+                        translation_updates.append(
+                            BulkTranslationUpdate(
+                                translation_key_id=key_id,
+                                language_code=lang_code,
+                                value=value,
+                                updated_by=csv_request.updated_by
+                            )
+                        )
+                        
+            except Exception as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Error processing row {row_num}: {str(e)}"
+                )
+        
+        # Perform bulk translation updates
+        translation_success = True
+        if translation_updates:
+            translation_success = await db_service.bulk_update_translations(translation_updates)
+        
+        if not translation_success:
+            raise HTTPException(status_code=500, detail="Failed to update translations")
+        
+        return APIResponse(
+            success=True,
+            message=f"CSV import completed successfully",
+            data={
+                "created_keys": created_keys,
+                "updated_keys": updated_keys,
+                "translations_updated": len(translation_updates),
+                "total_rows_processed": created_keys + updated_keys
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to import CSV: {str(e)}")
 
 
 @app.get("/translation-keys/{key_id}", response_model=TranslationKey)

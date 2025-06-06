@@ -21,24 +21,24 @@ describe('TranslationStore', () => {
             expect(result.current.searchFilters.searchTerm).toBe('hello');
         });
 
-        it('updates selected category', () => {
+        it('updates selected categories', () => {
             const { result } = renderHook(() => useTranslationStore());
 
             act(() => {
-                result.current.setSelectedCategory('common');
+                result.current.setSelectedCategories(['common', 'nav']);
             });
 
-            expect(result.current.searchFilters.selectedCategory).toBe('common');
+            expect(result.current.searchFilters.selectedCategories).toEqual(['common', 'nav']);
         });
 
-        it('updates selected locale', () => {
+        it('updates selected locales', () => {
             const { result } = renderHook(() => useTranslationStore());
 
             act(() => {
-                result.current.setSelectedLocale('en');
+                result.current.setSelectedLocales(['en', 'es']);
             });
 
-            expect(result.current.searchFilters.selectedLocale).toBe('en');
+            expect(result.current.searchFilters.selectedLocales).toEqual(['en', 'es']);
         });
 
         it('clears all filters', () => {
@@ -47,8 +47,8 @@ describe('TranslationStore', () => {
             // Set some filters first
             act(() => {
                 result.current.setSearchTerm('test');
-                result.current.setSelectedCategory('nav');
-                result.current.setSelectedLocale('es');
+                result.current.setSelectedCategories(['nav']);
+                result.current.setSelectedLocales(['es']);
             });
 
             // Clear all filters
@@ -58,8 +58,8 @@ describe('TranslationStore', () => {
 
             expect(result.current.searchFilters).toEqual({
                 searchTerm: '',
-                selectedCategory: '',
-                selectedLocale: '',
+                selectedCategories: [],
+                selectedLocales: [],
             });
         });
     });

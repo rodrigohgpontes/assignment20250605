@@ -27,8 +27,8 @@ interface TranslationStore {
 
     // Actions for search and filters
     setSearchTerm: (term: string) => void;
-    setSelectedCategory: (category: string) => void;
-    setSelectedLocale: (locale: string) => void;
+    setSelectedCategories: (categories: string[]) => void;
+    setSelectedLocales: (locales: string[]) => void;
     clearFilters: () => void;
 
     // Actions for editing
@@ -58,8 +58,8 @@ interface TranslationStore {
 const initialState = {
     searchFilters: {
         searchTerm: '',
-        selectedCategory: '',
-        selectedLocale: '',
+        selectedCategories: [],
+        selectedLocales: [],
     },
     editingState: null,
     isEditing: false,
@@ -80,22 +80,22 @@ export const useTranslationStore = create<TranslationStore>()(
                     searchFilters: { ...state.searchFilters, searchTerm: term },
                 }), false, 'setSearchTerm'),
 
-            setSelectedCategory: (category: string) =>
+            setSelectedCategories: (categories: string[]) =>
                 set((state) => ({
-                    searchFilters: { ...state.searchFilters, selectedCategory: category },
-                }), false, 'setSelectedCategory'),
+                    searchFilters: { ...state.searchFilters, selectedCategories: categories },
+                }), false, 'setSelectedCategories'),
 
-            setSelectedLocale: (locale: string) =>
+            setSelectedLocales: (locales: string[]) =>
                 set((state) => ({
-                    searchFilters: { ...state.searchFilters, selectedLocale: locale },
-                }), false, 'setSelectedLocale'),
+                    searchFilters: { ...state.searchFilters, selectedLocales: locales },
+                }), false, 'setSelectedLocales'),
 
             clearFilters: () =>
                 set({
                     searchFilters: {
                         searchTerm: '',
-                        selectedCategory: '',
-                        selectedLocale: '',
+                        selectedCategories: [],
+                        selectedLocales: [],
                     },
                 }, false, 'clearFilters'),
 

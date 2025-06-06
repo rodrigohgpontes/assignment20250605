@@ -84,6 +84,25 @@ class ApiClient {
             method: 'DELETE',
         });
     }
+
+    async bulkImportFromCSV(csvData: string, updatedBy: string = 'csv_import'): Promise<{
+        success: boolean;
+        message: string;
+        data?: {
+            created_keys: number;
+            updated_keys: number;
+            translations_updated: number;
+            total_rows_processed: number;
+        };
+    }> {
+        return await this.request('/translation-keys/bulk/csv', {
+            method: 'POST',
+            body: JSON.stringify({
+                csv_data: csvData,
+                updated_by: updatedBy,
+            }),
+        });
+    }
 }
 
 export const apiClient = new ApiClient(); 

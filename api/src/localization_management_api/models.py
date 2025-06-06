@@ -62,6 +62,20 @@ class BulkUpdateRequest(BaseModel):
     updates: List[BulkTranslationUpdate]
 
 
+class CSVRow(BaseModel):
+    key: str = Field(..., description="Translation key identifier")
+    category: str = Field(..., description="Category for the translation key")
+    description: Optional[str] = Field(None, description="Optional description")
+    en: Optional[str] = Field(None, description="English translation")
+    es: Optional[str] = Field(None, description="Spanish translation")
+    pt: Optional[str] = Field(None, description="Portuguese translation")
+
+
+class CSVBulkImportRequest(BaseModel):
+    csv_data: str = Field(..., description="CSV content as string")
+    updated_by: str = Field(default="bulk_import", description="User performing the bulk import")
+
+
 class APIResponse(BaseModel):
     success: bool
     message: str

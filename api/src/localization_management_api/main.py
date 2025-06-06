@@ -4,9 +4,10 @@ from typing import List, Optional, Dict, Any
 from uuid import UUID
 import csv
 import io
+from mangum import Mangum
 
 from .config import settings
-from .database import db_service
+from .database import DatabaseService
 from .models import (
     TranslationKey,
     Translation,
@@ -22,8 +23,20 @@ from .models import (
 app = FastAPI(
     title="Localization Management API",
     description="API for managing translation keys and their translations",
-    version="1.0.0"
+    version="1.0.0",
+    root_path="/api"
 )
+
+handler = Mangum(app)
+
+# Lazy initialization of database service
+_db_service = None
+
+def get_db_service():
+    global _db_service
+    if _db_service is None:
+        _db_service = DatabaseService()
+    return _db_service
 
 # Add CORS middleware
 app.add_middleware(
@@ -44,6 +57,7 @@ async def get_localizations(project_id: str, locale: str) -> Dict[str, Any]:
     """
     try:
         # Get all translation keys
+        db_service = get_db_service()
         translation_keys = await db_service.get_translation_keys()
         
         localizations = {}
@@ -72,6 +86,7 @@ async def get_translation_keys(
 ) -> List[TranslationKey]:
     """Get all translation keys with optional filtering"""
     try:
+        db_service = get_db_service()
         if search:
             return await db_service.search_translation_keys(search)
         else:
@@ -95,6 +110,7 @@ async def bulk_update_translations(bulk_request: BulkUpdateRequest) -> APIRespon
         # Validate that all translation keys exist
         unique_key_ids = set(update.translation_key_id for update in bulk_request.updates)
         
+        db_service = get_db_service()
         for key_id in unique_key_ids:
             translation_key = await db_service.get_translation_key(key_id)
             if not translation_key:
@@ -131,6 +147,7 @@ async def bulk_import_from_csv(csv_request: CSVBulkImportRequest) -> APIResponse
         # Parse CSV data
         csv_reader = csv.DictReader(io.StringIO(csv_request.csv_data))
         
+        db_service = get_db_service()
         created_keys = 0
         updated_keys = 0
         translation_updates = []
@@ -220,6 +237,7 @@ async def bulk_import_from_csv(csv_request: CSVBulkImportRequest) -> APIResponse
 async def get_translation_key(key_id: UUID) -> TranslationKey:
     """Get a single translation key by ID"""
     try:
+        db_service = get_db_service()
         translation_key = await db_service.get_translation_key(key_id)
         if not translation_key:
             raise HTTPException(status_code=404, detail="Translation key not found")
@@ -234,6 +252,7 @@ async def get_translation_key(key_id: UUID) -> TranslationKey:
 async def create_translation_key(translation_key: TranslationKeyCreate) -> TranslationKey:
     """Create a new translation key"""
     try:
+        db_service = get_db_service()
         # Check if key already exists
         existing_key = await db_service.get_translation_key_by_key(translation_key.key)
         if existing_key:
@@ -250,6 +269,7 @@ async def create_translation_key(translation_key: TranslationKeyCreate) -> Trans
 async def update_translation_key(key_id: UUID, update_data: TranslationKeyUpdate) -> TranslationKey:
     """Update an existing translation key"""
     try:
+        db_service = get_db_service()
         translation_key = await db_service.update_translation_key(key_id, update_data)
         if not translation_key:
             raise HTTPException(status_code=404, detail="Translation key not found")
@@ -264,6 +284,7 @@ async def update_translation_key(key_id: UUID, update_data: TranslationKeyUpdate
 async def delete_translation_key(key_id: UUID) -> APIResponse:
     """Delete a translation key and all its translations"""
     try:
+        db_service = get_db_service()
         # Check if key exists first
         existing_key = await db_service.get_translation_key(key_id)
         if not existing_key:
@@ -286,6 +307,7 @@ async def delete_translation_key(key_id: UUID) -> APIResponse:
 async def get_translations_for_key(key_id: UUID) -> List[Translation]:
     """Get all translations for a specific translation key"""
     try:
+        db_service = get_db_service()
         # Check if key exists
         translation_key = await db_service.get_translation_key(key_id)
         if not translation_key:
@@ -302,6 +324,7 @@ async def get_translations_for_key(key_id: UUID) -> List[Translation]:
 async def get_translation(key_id: UUID, locale: str) -> Translation:
     """Get a specific translation for a key and language"""
     try:
+        db_service = get_db_service()
         translation = await db_service.get_translation(key_id, locale)
         if not translation:
             raise HTTPException(status_code=404, detail="Translation not found")
@@ -316,6 +339,7 @@ async def get_translation(key_id: UUID, locale: str) -> Translation:
 async def upsert_translation(key_id: UUID, locale: str, translation_data: TranslationCreate) -> Translation:
     """Create or update a translation for a specific key and language"""
     try:
+        db_service = get_db_service()
         # Check if key exists
         translation_key = await db_service.get_translation_key(key_id)
         if not translation_key:
@@ -332,6 +356,7 @@ async def upsert_translation(key_id: UUID, locale: str, translation_data: Transl
 async def create_translation(key_id: UUID, locale: str, translation_data: TranslationCreate) -> Translation:
     """Create a new translation for a specific key and language"""
     try:
+        db_service = get_db_service()
         # Check if key exists
         translation_key = await db_service.get_translation_key(key_id)
         if not translation_key:
@@ -355,6 +380,7 @@ async def create_translation(key_id: UUID, locale: str, translation_data: Transl
 async def get_categories() -> List[str]:
     """Get all unique categories"""
     try:
+        db_service = get_db_service()
         return await db_service.get_categories()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch categories: {str(e)}")

@@ -23,7 +23,9 @@ class Settings:
         
         # Validate required environment variables
         if not self.testing and (not self.supabase_url or not self.supabase_anon_key):
-            raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables")
+            print(f"Warning: SUPABASE_URL and SUPABASE_ANON_KEY are not set. Available env vars: {list(os.environ.keys())}")
+            # Don't raise error, just warn - let it fail at runtime if needed
+            # raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables")
 
     @property
     def database_url(self) -> Optional[str]:

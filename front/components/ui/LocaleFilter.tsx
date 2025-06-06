@@ -10,10 +10,6 @@ function getLocaleDisplayName(localeCode: string): string {
         'ja': 'Japanese',
         'ko': 'Korean',
         'zh': 'Chinese',
-        '0': 'Language 0',
-        '1': 'Language 1',
-        '2': 'Language 2',
-        '3': 'Language 3',
     };
 
     return localeMap[localeCode] || localeCode.toUpperCase();

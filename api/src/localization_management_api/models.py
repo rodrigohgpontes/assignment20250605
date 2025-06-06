@@ -11,7 +11,7 @@ class TranslationKeyBase(BaseModel):
 
 
 class TranslationKeyCreate(TranslationKeyBase):
-    pass
+    initial_translations: Optional[Dict[str, str]] = Field(None, description="Initial translations for the key")
 
 
 class TranslationKeyUpdate(TranslationKeyBase):

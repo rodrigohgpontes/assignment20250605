@@ -136,8 +136,11 @@ class DatabaseService:
     async def create_translation_key(self, translation_key: TranslationKeyCreate) -> TranslationKey:
         """Create a new translation key"""
         try:
+            # Exclude initial_translations from the database insert since it's not a table column
+            insert_data = translation_key.model_dump(exclude={'initial_translations'})
+            
             response = self.client.table("translation_keys").insert(
-                translation_key.model_dump()
+                insert_data
             ).execute()
             
             if response.data and len(response.data) > 0:

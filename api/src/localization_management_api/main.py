@@ -255,7 +255,22 @@ async def create_translation_key(translation_key: TranslationKeyCreate) -> Trans
         if existing_key:
             raise HTTPException(status_code=400, detail="Translation key already exists")
         
-        return await db_service.create_translation_key(translation_key)
+        # Create the translation key
+        created_key = await db_service.create_translation_key(translation_key)
+        
+        # Create initial translations if provided
+        if translation_key.initial_translations:
+            for locale, value in translation_key.initial_translations.items():
+                if locale and value is not None:  # Allow empty strings
+                    translation_data = TranslationCreate(
+                        language_code=locale,
+                        value=value,
+                        updated_by="system"
+                    )
+                    await db_service.upsert_translation(created_key.id, locale, translation_data)
+        
+        # Return the created key with its translations
+        return await db_service.get_translation_key(created_key.id)
     except HTTPException:
         raise
     except Exception as e:

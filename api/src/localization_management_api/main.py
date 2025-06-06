@@ -4,7 +4,6 @@ from typing import List, Optional, Dict, Any
 from uuid import UUID
 import csv
 import io
-from mangum import Mangum
 
 from .config import settings
 from .database import DatabaseService
@@ -26,8 +25,6 @@ app = FastAPI(
     version="1.0.0",
     root_path="/api"
 )
-
-handler = Mangum(app)
 
 # Lazy initialization of database service
 _db_service = None

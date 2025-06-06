@@ -11,6 +11,4 @@ from localization_management_api import main
 # (WSGI or ASGI callable). Expose the FastAPI instance created in main.py.
 app = main.app  # type: ignore
 
-# Optional: If you still need the Mangum handler (e.g. for local AWS Lambda
-# testing) you can keep the line below, but it is **not** used by Vercel.
-# handler = main.handler
+# Mangum (and handler) removed so that locally (or non-Vercel) the module does not try to import Mangum.

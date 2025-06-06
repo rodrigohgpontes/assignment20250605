@@ -1,3 +1,6 @@
+# Remove Mangum (or comment it out) so that locally the module does not try to import Mangum.
+# mangum
+
 fastapi
 uvicorn[standard]
 supabase
@@ -5,5 +8,4 @@ pytest
 pytest-asyncio
 pydantic
 python-dotenv
-httpx
-mangum 
+httpx 
